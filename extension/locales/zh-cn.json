@@ -1,0 +1,9 @@
+{
+    "extension.name": "小智 MCP 客户端",
+    "gui.blocklyText.xiaozhiMcp.initWiFi": "初始化 WiFi 名称[SSID] 密码[PASSWORD]",
+    "gui.blocklyText.xiaozhiMcp.initMCP": "初始化 MCP 连接 端点[ENDPOINT]",
+    "gui.blocklyText.xiaozhiMcp.mcpLoop": "保持 MCP 连接",
+    "gui.blocklyText.xiaozhiMcp.registerTool": "注册工具 [TOOL_NAME] 描述[DESCRIPTION]",
+    "gui.blocklyText.xiaozhiMcp.mcpAcceptTool": "当 MCP 接收到工具 [TOOL_NAME] 调用时",
+    "gui.blocklyText.xiaozhiMcp.mcpReturnResult": "返回 MCP 结果 [KEY]的值为 [VALUE]"
+}

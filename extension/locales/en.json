@@ -1,0 +1,9 @@
+{
+    "extension.name": "Xiaozhi MCP Client",
+    "gui.blocklyText.xiaozhiMcp.initWiFi": "Initialize WiFi SSID[SSID] Password[PASSWORD]",
+    "gui.blocklyText.xiaozhiMcp.initMCP": "Initialize MCP Connection Endpoint[ENDPOINT]",
+    "gui.blocklyText.xiaozhiMcp.mcpLoop": "Maintain MCP Connection",
+    "gui.blocklyText.xiaozhiMcp.registerTool": "Register Tool [TOOL_NAME] Description[DESCRIPTION]",
+    "gui.blocklyText.xiaozhiMcp.mcpAcceptTool": "When MCP receives tool call [TOOL_NAME]",
+    "gui.blocklyText.xiaozhiMcp.mcpReturnResult": "Return MCP result [KEY] = [VALUE]"
+}
