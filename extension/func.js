@@ -1,8 +1,28 @@
+const MCP_GLOBALS_AND_HELPERS = `String mcp_current_args = "";
+String mcp_return_value = "{}";
+StaticJsonDocument<1024> _mcpDoc;
+
+void _mcpParse() {
+  _mcpDoc.clear();
+  deserializeJson(_mcpDoc, mcp_current_args);
+}
+String _mcpGetStr(const char* k) {
+  const char* val = _mcpDoc[k] | "";
+  return String(val);
+}
+float _mcpGetNum(const char* k) {
+  return _mcpDoc[k] | 0.0f;
+}
+bool _mcpGetBool(const char* k) {
+  return _mcpDoc[k] | false;
+}`;
+
 class func {
     constructor(runtime, extensionId) {
         this.runtime = runtime;
         this.extensionId = extensionId;
-        this.toolRegistrations = [];
+        this.toolRegistrations = new Map();  // key: toolName，防止多次遍历导致重复
+        this.pendingParams = [];
     }
 
     initWiFi(generator, block, parameter) {
@@ -57,12 +77,12 @@ class func {
     }
 
     mcpLoop(generator, block, parameter) {
-        if (this.toolRegistrations.length > 0) {
-            let registrations = this.toolRegistrations.join('\n\n');
+        if (this.toolRegistrations.size > 0) {
+            let registrations = [...this.toolRegistrations.values()].join('\n\n');
             generator.addFunction(`void registerAllMcpTools() {
     ${registrations}
 }`);
-            this.toolRegistrations = [];
+            this.toolRegistrations.clear();
         }
 
         return `mcpClient.loop();
@@ -78,19 +98,77 @@ class func {
         let toolName = toolNameRaw.replace(/["']/g, '');
         let description = parameter.DESCRIPTION.code;
 
-        generator.addObject('mcp_globals', `String mcp_current_args = "";\nString mcp_return_value = "{}";`);
+        generator.addObject('mcp_globals', MCP_GLOBALS_AND_HELPERS);
+
+        // 从 pendingParams 构建 JSON Schema
+        let properties = {};
+        let required = [];
+        for (let p of this.pendingParams) {
+            let propDef = { type: p.type };
+            if (p.title) propDef.title = p.title;
+            if (p.desc) propDef.description = p.desc;
+            if (p.enum && p.enum.length > 0) propDef.enum = p.enum;
+            properties[p.name] = propDef;
+            required.push(p.name);
+        }
+        this.pendingParams = [];
+        let schemaObj = { properties, required, type: 'object' };
+        let schema = JSON.stringify(schemaObj);
 
         let funcName = `onMcpTool_${toolName.replace(/[^a-zA-Z0-9_]/g, '_')}`;
 
-        this.toolRegistrations.push(`// 注册：${toolName}
-    mcpClient.registerTool(${toolNameRaw}, ${description}, R"json({"type":"object","properties":{}})json", [](const String& args) -> WebSocketMCP::ToolResponse {
+        this.toolRegistrations.set(toolName, `// 注册：${toolName}
+    mcpClient.registerTool(${toolNameRaw}, ${description}, R"json(${schema})json", [](const String& args) -> WebSocketMCP::ToolResponse {
         mcp_current_args = args;
         mcp_return_value = "{}";
+        _mcpParse();
         ${funcName}();
         return WebSocketMCP::ToolResponse(mcp_return_value);
     });`);
 
         return '';
+    }
+
+    addToolParam(generator, block, parameter) {
+        let name = parameter.PARAM_NAME.code.replace(/["']/g, '');
+        let title = parameter.PARAM_TITLE.code.replace(/["']/g, '');
+        let type = parameter.PARAM_TYPE.code.replace(/["']/g, '');  // 'string' | 'number' | 'boolean'
+        let desc = parameter.PARAM_DESC.code.replace(/["']/g, '');
+        // 用 name 去重，同一参数多次遍历只保留最后一次
+        let idx = this.pendingParams.findIndex(p => p.name === name);
+        if (idx >= 0) {
+            this.pendingParams[idx] = { name, title, type, desc, enum: this.pendingParams[idx].enum };
+        } else {
+            this.pendingParams.push({ name, title, type, desc, enum: [] });
+        }
+        return '';
+    }
+
+    addToolParamChoices(generator, block, parameter) {
+        let choices = parameter.CHOICES.code.replace(/["']/g, '');
+        if (this.pendingParams.length > 0) {
+            let last = this.pendingParams[this.pendingParams.length - 1];
+            last.enum = choices.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        }
+        return '';
+    }
+
+    getMcpString(generator, block, parameter) {
+        let key = parameter.KEY.code.replace(/["']/g, '');
+        generator.addObject('mcp_globals', MCP_GLOBALS_AND_HELPERS);
+        return `_mcpGetStr("${key}")`;
+    }
+
+    getMcpNumber(generator, block, parameter) {
+        let key = parameter.KEY.code.replace(/["']/g, '');
+        generator.addObject('mcp_globals', MCP_GLOBALS_AND_HELPERS);
+        return `_mcpGetNum("${key}")`;
+    }
+
+    getMcpBool(generator, block, parameter) {
+        let key = parameter.KEY.code.replace(/["']/g, '');
+        generator.addObject('mcp_globals', MCP_GLOBALS_AND_HELPERS);
+        return `_mcpGetBool("${key}")`;
     }
 
     mcpAcceptTool(generator, block, parameter) {

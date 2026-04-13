@@ -68,9 +68,13 @@ class XiaozhiMCPExtension {
                     blockType: BlockType.COMMAND,
                     arguments: {
                         ENDPOINT: {
-                            type: ArgumentType.STRING,
-                            inputParams: { symbol: '""' },
-                            defaultValue: 'wss://api.xiaozhi.me/mcp/?token=your_token'
+                            type: ArgumentType.TEXTAREA,
+                            inputParams: {
+                                inputValue: "",
+                                color: "#2792c0",
+                            },
+                            defaultValue: 'wss://api.xiaozhi.me/mcp/?token=your_token',
+                            inputTypes: [DataType.STRING],
                         }
                     }
                 },
@@ -109,6 +113,53 @@ class XiaozhiMCPExtension {
                         }
                     }
                 },
+                // 为下一次注册工具声明参数
+                {
+                    opcode: 'addToolParam',
+                    text: formatMessage({
+                        id: 'gui.blocklyText.xiaozhiMcp.addToolParam',
+                        default: 'Add Parameter [PARAM_NAME] Title[PARAM_TITLE] Type[PARAM_TYPE] Desc[PARAM_DESC]'
+                    }),
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PARAM_NAME: {
+                            type: ArgumentType.STRING,
+                            inputParams: { symbol: '""' },
+                            defaultValue: 'state'
+                        },
+                        PARAM_TITLE: {
+                            type: ArgumentType.STRING,
+                            inputParams: { symbol: '""' },
+                            defaultValue: ''
+                        },
+                        PARAM_TYPE: {
+                            type: ArgumentType.STRING,
+                            menu: 'mcpParamType',
+                            defaultValue: 'string'
+                        },
+                        PARAM_DESC: {
+                            type: ArgumentType.STRING,
+                            inputParams: { symbol: '""' },
+                            defaultValue: ''
+                        }
+                    }
+                },
+                // // 为上一个参数设置可选值（enum）
+                // {
+                //     opcode: 'addToolParamChoices',
+                //     text: formatMessage({
+                //         id: 'gui.blocklyText.xiaozhiMcp.addToolParamChoices',
+                //         default: 'Set Last Param Choices [CHOICES]'
+                //     }),
+                //     blockType: BlockType.COMMAND,
+                //     arguments: {
+                //         CHOICES: {
+                //             type: ArgumentType.STRING,
+                //             inputParams: { symbol: '""' },
+                //             defaultValue: 'on,off,blink,flow'
+                //         }
+                //     }
+                // },
                 {
 
                     opcode: 'mcpAcceptTool',
@@ -125,6 +176,54 @@ class XiaozhiMCPExtension {
                         }
                     }
                 },
+                '---',
+                // 读取 MCP 传入的参数值
+                {
+                    opcode: 'getMcpString',
+                    text: formatMessage({
+                        id: 'gui.blocklyText.xiaozhiMcp.getMcpString',
+                        default: 'Get MCP string param [KEY]'
+                    }),
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        KEY: {
+                            type: ArgumentType.STRING,
+                            inputParams: { symbol: '""' },
+                            defaultValue: 'state'
+                        }
+                    }
+                },
+                {
+                    opcode: 'getMcpNumber',
+                    text: formatMessage({
+                        id: 'gui.blocklyText.xiaozhiMcp.getMcpNumber',
+                        default: 'Get MCP number param [KEY]'
+                    }),
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        KEY: {
+                            type: ArgumentType.STRING,
+                            inputParams: { symbol: '""' },
+                            defaultValue: 'state'
+                        }
+                    }
+                },
+                {
+                    opcode: 'getMcpBool',
+                    text: formatMessage({
+                        id: 'gui.blocklyText.xiaozhiMcp.getMcpBool',
+                        default: 'Get MCP boolean param [KEY]'
+                    }),
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        KEY: {
+                            type: ArgumentType.STRING,
+                            inputParams: { symbol: '""' },
+                            defaultValue: 'state'
+                        }
+                    }
+                },
+                '---',
                 {
                     opcode: 'mcpReturnResult',
                     text: formatMessage({
@@ -146,7 +245,22 @@ class XiaozhiMCPExtension {
                     }
                 }
             ],
-            menus: {}
+            menus: {
+                mcpParamType: [
+                    {
+                        text: formatMessage({ id: 'gui.blocklyText.xiaozhiMcp.paramType.string', default: 'String' }),
+                        value: 'string'
+                    },
+                    {
+                        text: formatMessage({ id: 'gui.blocklyText.xiaozhiMcp.paramType.number', default: 'Number' }),
+                        value: 'number'
+                    },
+                    {
+                        text: formatMessage({ id: 'gui.blocklyText.xiaozhiMcp.paramType.boolean', default: 'Boolean' }),
+                        value: 'boolean'
+                    }
+                ]
+            }
         };
     }
 }
