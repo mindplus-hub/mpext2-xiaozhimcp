@@ -22,7 +22,8 @@ class func {
         this.runtime = runtime;
         this.extensionId = extensionId;
         this.toolRegistrations = new Map();  // key: toolName，防止多次遍历导致重复
-        this.pendingParams = [];
+        this.pendingParamsByTool = new Map();
+        this.lastParamToolName = '';
     }
 
     initWiFi(generator, block, parameter) {
@@ -100,10 +101,11 @@ class func {
 
         generator.addObject('mcp_globals', MCP_GLOBALS_AND_HELPERS);
 
-        // 从 pendingParams 构建 JSON Schema
+        // 从当前工具的参数缓存构建 JSON Schema
         let properties = {};
         let required = [];
-        for (let p of this.pendingParams) {
+        let toolParams = this.pendingParamsByTool.get(toolName) || [];
+        for (let p of toolParams) {
             let propDef = { type: p.type };
             if (p.title) propDef.title = p.title;
             if (p.desc) propDef.description = p.desc;
@@ -111,7 +113,7 @@ class func {
             properties[p.name] = propDef;
             required.push(p.name);
         }
-        this.pendingParams = [];
+        this.pendingParamsByTool.delete(toolName);
         let schemaObj = { properties, required, type: 'object' };
         let schema = JSON.stringify(schemaObj);
 
@@ -130,25 +132,38 @@ class func {
     }
 
     addToolParam(generator, block, parameter) {
+        let toolNameCode = parameter.TOOL_NAME ? parameter.TOOL_NAME.code : '""';
+        let toolName = toolNameCode.replace(/["']/g, '');
         let name = parameter.PARAM_NAME.code.replace(/["']/g, '');
         let title = parameter.PARAM_TITLE.code.replace(/["']/g, '');
         let type = parameter.PARAM_TYPE.code.replace(/["']/g, '');  // 'string' | 'number' | 'boolean'
         let desc = parameter.PARAM_DESC.code.replace(/["']/g, '');
-        // 用 name 去重，同一参数多次遍历只保留最后一次
-        let idx = this.pendingParams.findIndex(p => p.name === name);
-        if (idx >= 0) {
-            this.pendingParams[idx] = { name, title, type, desc, enum: this.pendingParams[idx].enum };
-        } else {
-            this.pendingParams.push({ name, title, type, desc, enum: [] });
+
+        if (!toolName) {
+            return '';
         }
+
+        this.lastParamToolName = toolName;
+        let params = this.pendingParamsByTool.get(toolName) || [];
+
+        // 用 name 去重，同一参数多次遍历只保留最后一次
+        let idx = params.findIndex(p => p.name === name);
+        if (idx >= 0) {
+            params[idx] = { name, title, type, desc, enum: params[idx].enum };
+        } else {
+            params.push({ name, title, type, desc, enum: [] });
+        }
+        this.pendingParamsByTool.set(toolName, params);
         return '';
     }
 
     addToolParamChoices(generator, block, parameter) {
         let choices = parameter.CHOICES.code.replace(/["']/g, '');
-        if (this.pendingParams.length > 0) {
-            let last = this.pendingParams[this.pendingParams.length - 1];
+        let params = this.pendingParamsByTool.get(this.lastParamToolName) || [];
+        if (params.length > 0) {
+            let last = params[params.length - 1];
             last.enum = choices.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            this.pendingParamsByTool.set(this.lastParamToolName, params);
         }
         return '';
     }

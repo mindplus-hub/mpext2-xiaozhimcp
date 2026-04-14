@@ -118,10 +118,15 @@ class XiaozhiMCPExtension {
                     opcode: 'addToolParam',
                     text: formatMessage({
                         id: 'gui.blocklyText.xiaozhiMcp.addToolParam',
-                        default: 'Add Parameter [PARAM_NAME] Title[PARAM_TITLE] Type[PARAM_TYPE] Desc[PARAM_DESC]'
+                        default: 'Add Parameter To [TOOL_NAME] Name[PARAM_NAME] Title[PARAM_TITLE] Type[PARAM_TYPE] Desc[PARAM_DESC]'
                     }),
                     blockType: BlockType.COMMAND,
                     arguments: {
+                        TOOL_NAME: {
+                            type: ArgumentType.STRING,
+                            inputParams: { symbol: '""' },
+                            defaultValue: 'my_tool'
+                        },
                         PARAM_NAME: {
                             type: ArgumentType.STRING,
                             inputParams: { symbol: '""' },

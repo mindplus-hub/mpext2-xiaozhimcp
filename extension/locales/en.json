@@ -4,7 +4,7 @@
     "gui.blocklyText.xiaozhiMcp.initMCP": "Initialize MCP Connection Endpoint[ENDPOINT]",
     "gui.blocklyText.xiaozhiMcp.mcpLoop": "Maintain MCP Connection",
     "gui.blocklyText.xiaozhiMcp.registerTool": "Register Tool [TOOL_NAME] Description[DESCRIPTION]",
-    "gui.blocklyText.xiaozhiMcp.addToolParam": "Add Param [PARAM_NAME] Title[PARAM_TITLE] Type[PARAM_TYPE] Desc[PARAM_DESC]",
+    "gui.blocklyText.xiaozhiMcp.addToolParam": "Add Parameter To [TOOL_NAME] Name[PARAM_NAME] Title[PARAM_TITLE] Type[PARAM_TYPE] Desc[PARAM_DESC]",
     "gui.blocklyText.xiaozhiMcp.addToolParamChoices": "Set Last Param Choices [CHOICES]",
     "gui.blocklyText.xiaozhiMcp.mcpAcceptTool": "When MCP receives tool call [TOOL_NAME]",
     "gui.blocklyText.xiaozhiMcp.getMcpString": "Get MCP string param [KEY]",
